@@ -28,7 +28,6 @@ jobs:
           version-file: './version.txt'
           skip-version-file: false
           skip-commit: true
-          skip-v: true
           output-file: 'CHANGELOG.md'
           release-count: 0
           tag-prefix: 'v'
