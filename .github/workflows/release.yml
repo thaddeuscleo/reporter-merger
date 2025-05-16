@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Generate changelog
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-file: './version.txt'
+          skip-version-file: false
+          skip-commit: true
+          skip-v: true
+          output-file: 'CHANGELOG.md'
+          release-count: 0
+          tag-prefix: 'v'
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o reporter-merger-linux-amd64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o reporter-merger-darwin-amd64 main.go
+          GOOS=windows GOARCH=amd64 go build -o reporter-merger-windows-amd64.exe main.go
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            reporter-merger-linux-amd64
+            reporter-merger-darwin-amd64
+            reporter-merger-windows-amd64.exe
+            CHANGELOG.md
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
